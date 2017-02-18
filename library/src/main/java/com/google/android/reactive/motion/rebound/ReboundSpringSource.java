@@ -21,17 +21,17 @@ import com.facebook.rebound.OrigamiValueConverter;
 import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringSystem;
-import com.google.android.material.motion.observable.IndefiniteObservable.Connector;
-import com.google.android.material.motion.observable.IndefiniteObservable.Disconnector;
-import com.google.android.material.motion.observable.IndefiniteObservable.Subscription;
-import com.google.android.material.motion.streams.MotionObservable;
-import com.google.android.material.motion.streams.MotionObservable.MotionObserver;
-import com.google.android.material.motion.streams.MotionObservable.SimpleMotionObserver;
-import com.google.android.material.motion.streams.interactions.MaterialSpring;
-import com.google.android.material.motion.streams.operators.CommonOperators;
-import com.google.android.material.motion.streams.sources.SpringSource;
-import com.google.android.material.motion.streams.springs.TypeVectorizer;
+import com.google.android.indefinite.observable.IndefiniteObservable.Connector;
+import com.google.android.indefinite.observable.IndefiniteObservable.Disconnector;
+import com.google.android.indefinite.observable.IndefiniteObservable.Subscription;
+import com.google.android.reactive.motion.MotionObservable;
+import com.google.android.reactive.motion.MotionObservable.MotionObserver;
+import com.google.android.reactive.motion.MotionObservable.SimpleMotionObserver;
+import com.google.android.reactive.motion.interactions.MaterialSpring;
+import com.google.android.reactive.motion.operators.CommonOperators;
 import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
+import com.google.android.reactive.motion.sources.SpringSource;
+import com.google.android.reactive.motion.springs.TypeVectorizer;
 
 /**
  * A source for rebound springs.
