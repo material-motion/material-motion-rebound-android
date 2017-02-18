@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright 2016-present The Material Motion Authors. All Rights Reserved.
+  ~ Copyright 2017-present The Material Motion Authors. All Rights Reserved.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -14,12 +14,49 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
 -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
-  <TextView
-    android:id="@+id/text"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Hello, World!"/>
-</FrameLayout>
+  android:layout_height="match_parent"
+  android:clipChildren="false"
+  android:orientation="vertical">
+
+  <ImageView
+    android:id="@+id/rebound_destination"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:layout_gravity="center_vertical"
+    android:layout_margin="5dp"
+    android:padding="4dp"
+    android:src="#ffffff"
+    android:visibility="visible"/>
+
+  <ImageView
+    android:id="@+id/physics_destination"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:layout_below="@+id/rebound_destination"
+    android:layout_gravity="center_vertical"
+    android:layout_margin="5dp"
+    android:padding="4dp"
+    android:src="#ffffff"
+    android:visibility="visible"/>
+
+  <pl.droidsonroids.gif.GifImageView
+    android:id="@+id/rebound_target"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:layout_gravity="center_vertical"
+    android:layout_margin="5dp"
+    android:padding="2dp"
+    android:src="@drawable/mochi"/>
+
+  <pl.droidsonroids.gif.GifImageView
+    android:id="@+id/physics_target"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:layout_below="@+id/rebound_target"
+    android:layout_gravity="center_vertical"
+    android:layout_margin="5dp"
+    android:padding="2dp"
+    android:src="@drawable/mochi"/>
+</RelativeLayout>

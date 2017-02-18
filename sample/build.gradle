@@ -32,4 +32,5 @@ dependencies {
   // If you are developing any dependencies locally, also list them in local.dependencies.
   compile project(':library')
   compile 'com.android.support:appcompat-v7:25.1.0'
+  compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.5'
 }
