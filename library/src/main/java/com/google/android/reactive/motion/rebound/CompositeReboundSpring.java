@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.material.motion.reactive.motion.rebound;
+package com.google.android.reactive.motion.rebound;
 
 import android.os.Handler;
 import android.support.v4.util.SimpleArrayMap;

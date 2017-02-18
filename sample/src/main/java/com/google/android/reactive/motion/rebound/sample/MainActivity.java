@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.material.motion.reactive.motion.rebound.sample;
+package com.google.android.reactive.motion.rebound.sample;
 
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
@@ -24,7 +24,6 @@ import android.view.View;
 import com.google.android.material.motion.gestures.DragGestureRecognizer;
 import com.google.android.material.motion.gestures.GestureRecognizer;
 import com.google.android.material.motion.gestures.GestureRecognizer.GestureStateChangeListener;
-import com.google.android.material.motion.reactive.motion.rebound.ReboundSpringSource;
 import com.google.android.material.motion.streams.MotionRuntime;
 import com.google.android.material.motion.streams.ReactiveProperty;
 import com.google.android.material.motion.streams.gestures.OnTouchListeners;
@@ -32,6 +31,7 @@ import com.google.android.material.motion.streams.interactions.MaterialSpring;
 import com.google.android.material.motion.streams.properties.ViewProperties;
 import com.google.android.material.motion.streams.sources.PhysicsSpringSource;
 import com.google.android.material.motion.streams.springs.FloatArrayTypeVectorizer;
+import com.google.android.reactive.motion.rebound.ReboundSpringSource;
 
 import static com.google.android.material.motion.gestures.GestureRecognizer.BEGAN;
 import static com.google.android.material.motion.gestures.GestureRecognizer.CHANGED;

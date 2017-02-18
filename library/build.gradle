@@ -37,7 +37,7 @@ android {
 dependencies {
   // If you are developing any dependencies locally, also list them in local.dependencies.
   compile 'com.facebook.rebound:rebound:0.3.8'
-  compile 'com.github.material-motion:streams-android:develop-SNAPSHOT'
+  compile 'com.github.material-motion:reactive-motion-android:develop-SNAPSHOT'
 
   testCompile 'com.google.truth:truth:0.28'
   testCompile 'junit:junit:4.12'

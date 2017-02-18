@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.material.motion.reactive.motion.rebound;
+package com.google.android.reactive.motion.rebound;
 
 import android.support.annotation.NonNull;
 
@@ -24,7 +24,6 @@ import com.facebook.rebound.SpringSystem;
 import com.google.android.material.motion.observable.IndefiniteObservable.Connector;
 import com.google.android.material.motion.observable.IndefiniteObservable.Disconnector;
 import com.google.android.material.motion.observable.IndefiniteObservable.Subscription;
-import com.google.android.material.motion.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
 import com.google.android.material.motion.streams.MotionObservable;
 import com.google.android.material.motion.streams.MotionObservable.MotionObserver;
 import com.google.android.material.motion.streams.MotionObservable.SimpleMotionObserver;
@@ -32,6 +31,7 @@ import com.google.android.material.motion.streams.interactions.MaterialSpring;
 import com.google.android.material.motion.streams.operators.CommonOperators;
 import com.google.android.material.motion.streams.sources.SpringSource;
 import com.google.android.material.motion.streams.springs.TypeVectorizer;
+import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
 
 /**
  * A source for rebound springs.
