@@ -50,7 +50,7 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   private final MaterialSpring<?, T> spring;
 
   private final Spring[] reboundSprings;
-  private final SpringConnection<T> connection;
+  private final CompositeReboundSpring compositeSpring;
   private final List<CompositeSpringListener> springListeners = new ArrayList<>();
 
   private Subscription destinationSubscription;
@@ -65,7 +65,8 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
       reboundSprings[i] = springSystem.createSpring();
     }
 
-    connection = new SpringConnection<>(reboundSprings, new CompositeSpringListener() {
+    compositeSpring = new CompositeReboundSpring(reboundSprings);
+    compositeSpring.addListener(new CompositeSpringListener() {
       @Override
       public void onCompositeSpringActivate() {
         for (int i = 0, count = springListeners.size(); i < count; i++) {
@@ -162,30 +163,6 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
 
     for (int i = 0; i < reboundSprings.length; i++) {
       reboundSprings[i].setAtRest();
-    }
-  }
-
-  @Override
-  protected void onDisconnect(MotionObserver<T> observer) {
-    connection.disconnect();
-  }
-
-  private static class SpringConnection<T> {
-
-    private final CompositeReboundSpring spring;
-    private final CompositeSpringListener springListener;
-
-    private SpringConnection(
-      Spring[] springs,
-      CompositeSpringListener springListener) {
-      this.spring = new CompositeReboundSpring(springs);
-      this.springListener = springListener;
-
-      this.spring.addListener(springListener);
-    }
-
-    private void disconnect() {
-      spring.removeListener(springListener);
     }
   }
 }
