@@ -15,20 +15,20 @@
  */
 package com.google.android.reactive.motion.rebound;
 
+import android.support.v4.util.SimpleArrayMap;
+
 import com.facebook.rebound.OrigamiValueConverter;
 import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringSystem;
 import com.google.android.indefinite.observable.IndefiniteObservable.Subscription;
+import com.google.android.indefinite.observable.Observer;
 import com.google.android.reactive.motion.MotionObservable;
 import com.google.android.reactive.motion.MotionObservable.MotionObserver;
 import com.google.android.reactive.motion.MotionObservable.SimpleMotionObserver;
 import com.google.android.reactive.motion.interactions.MaterialSpring;
 import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
 import com.google.android.reactive.motion.sources.SpringSource;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A source for rebound springs.
@@ -51,7 +51,7 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
 
   private final Spring[] reboundSprings;
   private final CompositeReboundSpring compositeSpring;
-  private final List<CompositeSpringListener> springListeners = new ArrayList<>();
+  private final SimpleArrayMap<Observer<T>, CompositeSpringListener> springListeners = new SimpleArrayMap<>();
 
   private Subscription destinationSubscription;
   private Subscription frictionSubscription;
@@ -70,21 +70,21 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
       @Override
       public void onCompositeSpringActivate() {
         for (int i = 0, count = springListeners.size(); i < count; i++) {
-          springListeners.get(i).onCompositeSpringActivate();
+          springListeners.valueAt(i).onCompositeSpringActivate();
         }
       }
 
       @Override
       public void onCompositeSpringUpdate(float[] values) {
         for (int i = 0, count = springListeners.size(); i < count; i++) {
-          springListeners.get(i).onCompositeSpringUpdate(values);
+          springListeners.valueAt(i).onCompositeSpringUpdate(values);
         }
       }
 
       @Override
       public void onCompositeSpringAtRest() {
         for (int i = 0, count = springListeners.size(); i < count; i++) {
-          springListeners.get(i).onCompositeSpringAtRest();
+          springListeners.valueAt(i).onCompositeSpringAtRest();
         }
       }
     });
@@ -92,7 +92,7 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
 
   @Override
   protected void onConnect(final MotionObserver<T> observer) {
-    springListeners.add(new CompositeSpringListener() {
+    springListeners.put(observer, new CompositeSpringListener() {
 
       @Override
       public void onCompositeSpringActivate() {
@@ -164,5 +164,10 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
     for (int i = 0; i < reboundSprings.length; i++) {
       reboundSprings[i].setAtRest();
     }
+  }
+
+  @Override
+  protected void onDisconnect(MotionObserver<T> observer) {
+    springListeners.remove(observer);
   }
 }
