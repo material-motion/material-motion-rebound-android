@@ -15,20 +15,15 @@
  */
 package com.google.android.reactive.motion.rebound;
 
-import android.support.annotation.NonNull;
-
 import com.facebook.rebound.OrigamiValueConverter;
 import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringSystem;
-import com.google.android.indefinite.observable.IndefiniteObservable.Connector;
-import com.google.android.indefinite.observable.IndefiniteObservable.Disconnector;
 import com.google.android.indefinite.observable.IndefiniteObservable.Subscription;
 import com.google.android.reactive.motion.MotionObservable;
 import com.google.android.reactive.motion.MotionObservable.MotionObserver;
 import com.google.android.reactive.motion.MotionObservable.SimpleMotionObserver;
 import com.google.android.reactive.motion.interactions.MaterialSpring;
-import com.google.android.reactive.motion.operators.CommonOperators;
 import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
 import com.google.android.reactive.motion.sources.SpringSource;
 import com.google.android.reactive.motion.springs.TypeVectorizer;
@@ -40,118 +35,97 @@ import com.google.android.reactive.motion.springs.TypeVectorizer;
  * values by vectorizing the value into floats, and animating them individually using separate
  * rebound springs.
  */
-public final class ReboundSpringSource extends SpringSource {
+public final class ReboundSpringSource<T> extends SpringSource<T> {
 
-  public static final SpringSource SPRING_SOURCE = new ReboundSpringSource();
+  public static final System SYSTEM = new System() {
+    @Override
+    public <T> SpringSource<T> create(MaterialSpring<?, T> spring) {
+      return new ReboundSpringSource<>(spring);
+    }
+  };
+
   private final SpringSystem springSystem = SpringSystem.create();
+  private final MaterialSpring<?, T> spring;
 
-  /**
-   * Creates a spring source for a T valued spring.
-   * <p>
-   * The properties on the <code>spring</code> param may be changed to dynamically modify the
-   * behavior of this source.
-   */
-  public static <O, T> MotionObservable<T> from(MaterialSpring<O, T> spring) {
-    return SPRING_SOURCE.create(spring);
+  private Spring[] reboundSprings;
+  private SpringConnection<T> connection;
+
+  private Subscription destinationSubscription;
+  private Subscription frictionSubscription;
+  private Subscription tensionSubscription;
+
+  public ReboundSpringSource(MaterialSpring<?, T> spring) {
+    super(spring);
+    this.spring = spring;
   }
 
   @Override
-  public <O, T> MotionObservable<T> create(final MaterialSpring<O, T> spring) {
-    return new MotionObservable<>(new Connector<MotionObserver<T>>() {
+  protected void onConnect(MotionObserver<T> observer) {
+    reboundSprings = new Spring[spring.vectorizer.getVectorLength()];
+    for (int i = 0; i < reboundSprings.length; i++) {
+      reboundSprings[i] = springSystem.createSpring();
+    }
 
-      private Spring[] reboundSprings;
+    connection = new SpringConnection<>(reboundSprings, spring.vectorizer, observer);
+  }
 
-      private Subscription destinationSubscription;
-      private Subscription frictionSubscription;
-      private Subscription tensionSubscription;
-
-      @NonNull
+  @Override
+  protected void onEnable(MotionObserver<T> observer) {
+    final SpringConfig springConfig = new SpringConfig(0, 0);
+    tensionSubscription = spring.tension.subscribe(new SimpleMotionObserver<Float>() {
       @Override
-      public Disconnector connect(MotionObserver<T> observer) {
-        reboundSprings = new Spring[spring.vectorizer.getVectorLength()];
-        for (int i = 0; i < reboundSprings.length; i++) {
-          reboundSprings[i] = springSystem.createSpring();
-        }
-
-        final SpringConnection<T> connection =
-          new SpringConnection<>(reboundSprings, spring.vectorizer, observer);
-
-        final Subscription enabledSubscription =
-          spring.enabled.getStream()
-            .compose(CommonOperators.<Boolean>dedupe())
-            .subscribe(new SimpleMotionObserver<Boolean>() {
-              @Override
-              public void next(Boolean enabled) {
-                if (enabled) {
-                  start();
-                } else {
-                  stop();
-                }
-              }
-            });
-
-        return new Disconnector() {
-          @Override
-          public void disconnect() {
-            connection.disconnect();
-            enabledSubscription.unsubscribe();
-            stop();
-          }
-        };
+      public void next(Float value) {
+        springConfig.tension = OrigamiValueConverter.tensionFromOrigamiValue(value);
       }
+    });
+    frictionSubscription = spring.friction.subscribe(new SimpleMotionObserver<Float>() {
+      @Override
+      public void next(Float value) {
+        springConfig.friction = OrigamiValueConverter.frictionFromOrigamiValue(value);
+      }
+    });
 
-      private void start() {
-        final SpringConfig springConfig = new SpringConfig(0, 0);
-        tensionSubscription = spring.tension.subscribe(new SimpleMotionObserver<Float>() {
-          @Override
-          public void next(Float value) {
-            springConfig.tension = OrigamiValueConverter.tensionFromOrigamiValue(value);
-          }
-        });
-        frictionSubscription = spring.friction.subscribe(new SimpleMotionObserver<Float>() {
-          @Override
-          public void next(Float value) {
-            springConfig.friction = OrigamiValueConverter.frictionFromOrigamiValue(value);
-          }
-        });
+    final int count = reboundSprings.length;
 
-        final int count = reboundSprings.length;
+    float[] initialValues = new float[count];
+    spring.vectorizer.vectorize(spring.initialValue.read(), initialValues);
 
-        float[] initialValues = new float[count];
-        spring.vectorizer.vectorize(spring.initialValue.read(), initialValues);
+    float[] initialVelocities = new float[count];
+    spring.vectorizer.vectorize(spring.initialVelocity.read(), initialVelocities);
 
-        float[] initialVelocities = new float[count];
-        spring.vectorizer.vectorize(spring.initialVelocity.read(), initialVelocities);
+    for (int i = 0; i < count; i++) {
+      reboundSprings[i].setSpringConfig(springConfig);
+      reboundSprings[i].setCurrentValue(initialValues[i]);
+      reboundSprings[i].setVelocity(initialVelocities[i]);
+    }
+
+    final float[] endValues = new float[count];
+    destinationSubscription = spring.destination.subscribe(new SimpleMotionObserver<T>() {
+      @Override
+      public void next(T value) {
+        spring.vectorizer.vectorize(value, endValues);
 
         for (int i = 0; i < count; i++) {
-          reboundSprings[i].setSpringConfig(springConfig);
-          reboundSprings[i].setCurrentValue(initialValues[i]);
-          reboundSprings[i].setVelocity(initialVelocities[i]);
-        }
-
-        final float[] endValues = new float[count];
-        destinationSubscription = spring.destination.subscribe(new SimpleMotionObserver<T>() {
-          @Override
-          public void next(T value) {
-            spring.vectorizer.vectorize(value, endValues);
-
-            for (int i = 0; i < count; i++) {
-              reboundSprings[i].setEndValue(endValues[i]);
-            }
-          }
-        });
-      }
-
-      private void stop() {
-        tensionSubscription.unsubscribe();
-        frictionSubscription.unsubscribe();
-        destinationSubscription.unsubscribe();
-
-        for (int i = 0; i < reboundSprings.length; i++) {
-          reboundSprings[i].setAtRest();
+          reboundSprings[i].setEndValue(endValues[i]);
         }
       }
     });
+  }
+
+  @Override
+  protected void onDisable(MotionObserver<T> observer) {
+    tensionSubscription.unsubscribe();
+    frictionSubscription.unsubscribe();
+    destinationSubscription.unsubscribe();
+
+    for (int i = 0; i < reboundSprings.length; i++) {
+      reboundSprings[i].setAtRest();
+    }
+  }
+
+  @Override
+  protected void onDisconnect(MotionObserver<T> observer) {
+    connection.disconnect();
   }
 
   private static class SpringConnection<T> {

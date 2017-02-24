@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
       0.01f,
       1f,
       4f,
-      ReboundSpringSource.SPRING_SOURCE);
+      ReboundSpringSource.SYSTEM);
     final MaterialSpring<View, Float[]> physicsSpring = new MaterialSpring<>(
       ViewProperties.TRANSLATION,
       new FloatArrayTypeVectorizer(2),
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
       0.01f,
       1f,
       4f,
-      PhysicsSpringSource.SPRING_SOURCE);
+      PhysicsSpringSource.SYSTEM);
 
     OnTouchListeners.add(container, new View.OnTouchListener() {
       @Override
