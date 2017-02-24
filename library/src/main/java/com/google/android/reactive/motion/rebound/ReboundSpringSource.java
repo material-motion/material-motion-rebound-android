@@ -26,7 +26,9 @@ import com.google.android.reactive.motion.MotionObservable.SimpleMotionObserver;
 import com.google.android.reactive.motion.interactions.MaterialSpring;
 import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
 import com.google.android.reactive.motion.sources.SpringSource;
-import com.google.android.reactive.motion.springs.TypeVectorizer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A source for rebound springs.
@@ -47,8 +49,9 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   private final SpringSystem springSystem = SpringSystem.create();
   private final MaterialSpring<?, T> spring;
 
-  private Spring[] reboundSprings;
-  private SpringConnection<T> connection;
+  private final Spring[] reboundSprings;
+  private final SpringConnection<T> connection;
+  private final List<CompositeSpringListener> springListeners = new ArrayList<>();
 
   private Subscription destinationSubscription;
   private Subscription frictionSubscription;
@@ -57,16 +60,55 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   public ReboundSpringSource(MaterialSpring<?, T> spring) {
     super(spring);
     this.spring = spring;
-  }
-
-  @Override
-  protected void onConnect(MotionObserver<T> observer) {
     reboundSprings = new Spring[spring.vectorizer.getVectorLength()];
     for (int i = 0; i < reboundSprings.length; i++) {
       reboundSprings[i] = springSystem.createSpring();
     }
 
-    connection = new SpringConnection<>(reboundSprings, spring.vectorizer, observer);
+    connection = new SpringConnection<>(reboundSprings, new CompositeSpringListener() {
+      @Override
+      public void onCompositeSpringActivate() {
+        for (int i = 0, count = springListeners.size(); i < count; i++) {
+          springListeners.get(i).onCompositeSpringActivate();
+        }
+      }
+
+      @Override
+      public void onCompositeSpringUpdate(float[] values) {
+        for (int i = 0, count = springListeners.size(); i < count; i++) {
+          springListeners.get(i).onCompositeSpringUpdate(values);
+        }
+      }
+
+      @Override
+      public void onCompositeSpringAtRest() {
+        for (int i = 0, count = springListeners.size(); i < count; i++) {
+          springListeners.get(i).onCompositeSpringAtRest();
+        }
+      }
+    });
+  }
+
+  @Override
+  protected void onConnect(final MotionObserver<T> observer) {
+    springListeners.add(new CompositeSpringListener() {
+
+      @Override
+      public void onCompositeSpringActivate() {
+        observer.state(MotionObservable.ACTIVE);
+      }
+
+      @Override
+      public void onCompositeSpringUpdate(float[] values) {
+        T value = spring.vectorizer.compose(values);
+        observer.next(value);
+      }
+
+      @Override
+      public void onCompositeSpringAtRest() {
+        observer.state(MotionObservable.AT_REST);
+      }
+    });
   }
 
   @Override
@@ -131,14 +173,13 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   private static class SpringConnection<T> {
 
     private final CompositeReboundSpring spring;
-    private final TypeVectorizer<T> vectorizer;
-    private final MotionObserver<T> observer;
+    private final CompositeSpringListener springListener;
 
     private SpringConnection(
-      Spring[] springs, TypeVectorizer<T> vectorizer, MotionObserver<T> observer) {
+      Spring[] springs,
+      CompositeSpringListener springListener) {
       this.spring = new CompositeReboundSpring(springs);
-      this.vectorizer = vectorizer;
-      this.observer = observer;
+      this.springListener = springListener;
 
       this.spring.addListener(springListener);
     }
@@ -146,23 +187,5 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
     private void disconnect() {
       spring.removeListener(springListener);
     }
-
-    private final CompositeSpringListener springListener = new CompositeSpringListener() {
-      @Override
-      public void onCompositeSpringActivate() {
-        observer.state(MotionObservable.ACTIVE);
-      }
-
-      @Override
-      public void onCompositeSpringUpdate(float[] values) {
-        T value = vectorizer.compose(values);
-        observer.next(value);
-      }
-
-      @Override
-      public void onCompositeSpringAtRest() {
-        observer.state(MotionObservable.AT_REST);
-      }
-    };
   }
 }
