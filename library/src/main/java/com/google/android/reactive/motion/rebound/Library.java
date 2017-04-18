@@ -16,9 +16,9 @@
 package com.google.android.reactive.motion.rebound;
 
 /**
- * Rebound extension for Reactive Motion  library class.
+ * Rebound extension for Material Motion library class.
  */
 public class Library {
 
-  public static final String LIBRARY_NAME = "Rebound extension for Reactive Motion ";
+  public static final String LIBRARY_NAME = "Rebound extension for Material Motion";
 }
