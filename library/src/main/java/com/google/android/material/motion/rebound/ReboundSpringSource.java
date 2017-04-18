@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.reactive.motion.rebound;
+package com.google.android.material.motion.rebound;
 
 import android.support.v4.util.SimpleArrayMap;
 
@@ -23,12 +23,12 @@ import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringSystem;
 import com.google.android.indefinite.observable.IndefiniteObservable.Subscription;
 import com.google.android.indefinite.observable.Observer;
-import com.google.android.reactive.motion.MotionObservable;
-import com.google.android.reactive.motion.MotionObservable.MotionObserver;
-import com.google.android.reactive.motion.MotionObservable.SimpleMotionObserver;
-import com.google.android.reactive.motion.interactions.MaterialSpring;
-import com.google.android.reactive.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
-import com.google.android.reactive.motion.sources.SpringSource;
+import com.google.android.material.motion.MotionObserver;
+import com.google.android.material.motion.MotionObserver.SimpleMotionObserver;
+import com.google.android.material.motion.MotionState;
+import com.google.android.material.motion.interactions.MaterialSpring;
+import com.google.android.material.motion.rebound.CompositeReboundSpring.CompositeSpringListener;
+import com.google.android.material.motion.sources.SpringSource;
 
 /**
  * A source for rebound springs.
@@ -47,7 +47,7 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   };
 
   private final SpringSystem springSystem = SpringSystem.create();
-  private final MaterialSpring<?, T> spring;
+  private final MaterialSpring<?, T> interaction;
 
   private final Spring[] reboundSprings;
   private final CompositeReboundSpring compositeSpring;
@@ -57,10 +57,10 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   private Subscription frictionSubscription;
   private Subscription tensionSubscription;
 
-  public ReboundSpringSource(MaterialSpring<?, T> spring) {
-    super(spring);
-    this.spring = spring;
-    reboundSprings = new Spring[spring.vectorizer.getVectorLength()];
+  public ReboundSpringSource(MaterialSpring<?, T> interaction) {
+    super(interaction);
+    this.interaction = interaction;
+    reboundSprings = new Spring[interaction.vectorizer.getVectorLength()];
     for (int i = 0; i < reboundSprings.length; i++) {
       reboundSprings[i] = springSystem.createSpring();
     }
@@ -96,18 +96,18 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
 
       @Override
       public void onCompositeSpringActivate() {
-        observer.state(MotionObservable.ACTIVE);
+        interaction.state.write(MotionState.ACTIVE);
       }
 
       @Override
       public void onCompositeSpringUpdate(float[] values) {
-        T value = spring.vectorizer.compose(values);
+        T value = interaction.vectorizer.compose(values);
         observer.next(value);
       }
 
       @Override
       public void onCompositeSpringAtRest() {
-        observer.state(MotionObservable.AT_REST);
+        interaction.state.write(MotionState.AT_REST);
       }
     });
   }
@@ -115,13 +115,13 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
   @Override
   protected void onEnable(MotionObserver<T> observer) {
     final SpringConfig springConfig = new SpringConfig(0, 0);
-    tensionSubscription = spring.tension.subscribe(new SimpleMotionObserver<Float>() {
+    tensionSubscription = interaction.tension.subscribe(new SimpleMotionObserver<Float>() {
       @Override
       public void next(Float value) {
         springConfig.tension = OrigamiValueConverter.tensionFromOrigamiValue(value);
       }
     });
-    frictionSubscription = spring.friction.subscribe(new SimpleMotionObserver<Float>() {
+    frictionSubscription = interaction.friction.subscribe(new SimpleMotionObserver<Float>() {
       @Override
       public void next(Float value) {
         springConfig.friction = OrigamiValueConverter.frictionFromOrigamiValue(value);
@@ -131,10 +131,10 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
     final int count = reboundSprings.length;
 
     float[] initialValues = new float[count];
-    spring.vectorizer.vectorize(spring.initialValue.read(), initialValues);
+    interaction.vectorizer.vectorize(interaction.initialValue.read(), initialValues);
 
     float[] initialVelocities = new float[count];
-    spring.vectorizer.vectorize(spring.initialVelocity.read(), initialVelocities);
+    interaction.vectorizer.vectorize(interaction.initialVelocity.read(), initialVelocities);
 
     for (int i = 0; i < count; i++) {
       reboundSprings[i].setSpringConfig(springConfig);
@@ -143,10 +143,10 @@ public final class ReboundSpringSource<T> extends SpringSource<T> {
     }
 
     final float[] endValues = new float[count];
-    destinationSubscription = spring.destination.subscribe(new SimpleMotionObserver<T>() {
+    destinationSubscription = interaction.destination.subscribe(new SimpleMotionObserver<T>() {
       @Override
       public void next(T value) {
-        spring.vectorizer.vectorize(value, endValues);
+        interaction.vectorizer.vectorize(value, endValues);
 
         for (int i = 0; i < count; i++) {
           reboundSprings[i].setEndValue(endValues[i]);
