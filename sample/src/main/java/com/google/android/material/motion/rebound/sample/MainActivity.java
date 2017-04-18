@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.reactive.motion.rebound.sample;
+package com.google.android.material.motion.rebound.sample;
 
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.google.android.material.motion.MotionRuntime;
+import com.google.android.material.motion.ReactiveProperty;
 import com.google.android.material.motion.gestures.DragGestureRecognizer;
 import com.google.android.material.motion.gestures.GestureRecognizer;
 import com.google.android.material.motion.gestures.GestureRecognizer.GestureStateChangeListener;
-import com.google.android.reactive.motion.MotionRuntime;
-import com.google.android.reactive.motion.ReactiveProperty;
-import com.google.android.reactive.motion.gestures.OnTouchListeners;
-import com.google.android.reactive.motion.interactions.MaterialSpring;
-import com.google.android.reactive.motion.properties.ViewProperties;
-import com.google.android.reactive.motion.rebound.ReboundSpringSource;
-import com.google.android.reactive.motion.sources.PhysicsSpringSource;
-import com.google.android.reactive.motion.springs.FloatArrayTypeVectorizer;
+import com.google.android.material.motion.gestures.OnTouchListeners;
+import com.google.android.material.motion.interactions.MaterialSpring;
+import com.google.android.material.motion.properties.ViewProperties;
+import com.google.android.material.motion.rebound.ReboundSpringSource;
+import com.google.android.material.motion.sources.PhysicsSpringSource;
+import com.google.android.material.motion.springs.PointFTypeVectorizer;
 
 import static com.google.android.material.motion.gestures.GestureRecognizer.BEGAN;
 import static com.google.android.material.motion.gestures.GestureRecognizer.CHANGED;
@@ -68,22 +69,22 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void runDemo() {
-    final MaterialSpring<View, Float[]> reboundSpring = new MaterialSpring<>(
+    final MaterialSpring<View, PointF> reboundSpring = new MaterialSpring<>(
       ViewProperties.TRANSLATION,
-      new FloatArrayTypeVectorizer(2),
-      new Float[]{0f, 0f},
-      new Float[]{0f, 0f},
-      new Float[]{0f, 0f},
+      new PointFTypeVectorizer(),
+      new PointF(),
+      new PointF(),
+      new PointF(),
       0.01f,
       1f,
       4f,
       ReboundSpringSource.SYSTEM);
-    final MaterialSpring<View, Float[]> physicsSpring = new MaterialSpring<>(
+    final MaterialSpring<View, PointF> physicsSpring = new MaterialSpring<>(
       ViewProperties.TRANSLATION,
-      new FloatArrayTypeVectorizer(2),
-      new Float[]{0f, 0f},
-      new Float[]{0f, 0f},
-      new Float[]{0f, 0f},
+      new PointFTypeVectorizer(),
+      new PointF(),
+      new PointF(),
+      new PointF(),
       0.01f,
       1f,
       4f,
@@ -96,13 +97,13 @@ public class MainActivity extends AppCompatActivity {
 
         switch (action) {
           case MotionEvent.ACTION_DOWN:
-            reboundSpring.destination.write(new Float[]{600f, 0f});
-            physicsSpring.destination.write(new Float[]{600f, 0f});
+            reboundSpring.destination.write(new PointF(600f, 0f));
+            physicsSpring.destination.write(new PointF(600f, 0f));
             break;
           case MotionEvent.ACTION_UP:
           case MotionEvent.ACTION_CANCEL:
-            reboundSpring.destination.write(new Float[]{0f, 0f});
-            physicsSpring.destination.write(new Float[]{0f, 0f});
+            reboundSpring.destination.write(new PointF());
+            physicsSpring.destination.write(new PointF());
             break;
         }
 
@@ -120,15 +121,15 @@ public class MainActivity extends AppCompatActivity {
       public void onStateChanged(GestureRecognizer gestureRecognizer) {
         switch (gestureRecognizer.getState()) {
           case BEGAN:
-            Float[] initialDestination = reboundSpring.destination.read();
-            initialDestinationX = initialDestination[0];
-            initialDestinationY = initialDestination[1];
+            PointF initialDestination = reboundSpring.destination.read();
+            initialDestinationX = initialDestination.x;
+            initialDestinationY = initialDestination.y;
             break;
           case CHANGED:
-            Float[] newDestination = {
+            PointF newDestination = new PointF(
               initialDestinationX + dragRecognizer.getTranslationX(),
-              initialDestinationY + dragRecognizer.getTranslationY(),
-            };
+              initialDestinationY + dragRecognizer.getTranslationY()
+            );
             reboundSpring.destination.write(newDestination);
             physicsSpring.destination.write(newDestination);
             break;

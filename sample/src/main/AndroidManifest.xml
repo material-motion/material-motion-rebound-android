@@ -15,7 +15,7 @@
   ~ limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.google.android.reactive.motion.rebound.sample">
+  package="com.google.android.material.motion.rebound.sample">
 
   <application
     android:allowBackup="true"

@@ -13,12 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.reactive.motion.rebound;
+package com.google.android.material.motion.rebound;
 
-/**
- * Rebound extension for Material Motion library class.
- */
-public class Library {
+import com.google.android.reactive.motion.rebound.BuildConfig;
 
-  public static final String LIBRARY_NAME = "Rebound extension for Material Motion";
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class, sdk = 21)
+public class UnitTests {
+
+  @Before
+  public void setUp() {
+
+  }
+
+  @Test
+  public void unitTest() {
+
+  }
 }
